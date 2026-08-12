@@ -5,3 +5,4 @@ to other modules using `from lib.xx import x`.
 """
 
 from .config import *
+from .logging import *
