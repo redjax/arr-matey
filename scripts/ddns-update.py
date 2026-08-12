@@ -33,39 +33,11 @@ from lib.notifications import notify_ntfy
 
 log = logging.getLogger(__name__)
 
-ENV_PATH = r"C:\Users\drcor\acquisitions\.env"
-
-_env = dotenv_values(ENV_PATH)
-CONFIG_ROOT = _env["CONFIG_ROOT"]
-CF_API_TOKEN = _env["CF_API_TOKEN"]
-CF_ZONE = _env["CF_ZONE"]
-DDNS_RECORDS = [r.strip() for r in _env["DDNS_RECORDS"].split(",") if r.strip()]
-NTFY_SERVER = _env.get("NTFY_SERVER", "https://ntfy.sh")
-NTFY_TOPIC = _env.get("NTFY_TOPIC", "")
-
-LOG_PATH = f"{CONFIG_ROOT}\\ddns-update.log"
 CF_API = "https://api.cloudflare.com/client/v4"
-IP_ECHO_SERVICES = ["https://api.ipify.org?format=json", "https://ifconfig.me/all.json"]
-
-log = logging.getLogger("ddns-update")
-
-
-def notify_ntfy(title, message):
-    # Same best-effort pattern as scripts/rclone-sync.py's notify_ntfy: a failed
-    # push is logged but never fails the run -- notifications are a convenience,
-    # not something the DDNS update should depend on.
-    if not NTFY_TOPIC:
-        return
-    try:
-        r = requests.post(
-            NTFY_SERVER,
-            json={"topic": NTFY_TOPIC, "title": title, "message": message},
-            timeout=10,
-        )
-        if not r.ok:
-            log.warning(f"ntfy notification rejected ({r.status_code}): {title} -- {r.text[:200]}")
-    except requests.RequestException:
-        log.exception(f"ntfy notification failed: {title}")
+IP_ECHO_SERVICES = [
+    "https://api.ipify.org?format=json",
+    "https://ifconfig.me/all.json",
+]
 
 
 def current_wan_ip():
