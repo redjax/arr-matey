@@ -101,10 +101,10 @@ def get_record(zone_id, hostname, api_token):
     return result[0]
 
 
-def update_record(zone_id, record_id, new_ip):
+def update_record(zone_id, record_id, new_ip, api_token):
     r = requests.patch(
         f"{CF_API}/zones/{zone_id}/dns_records/{record_id}",
-        headers=cf_headers(),
+        headers=cf_headers(api_token),
         json={"content": new_ip},
         timeout=15,
     )
