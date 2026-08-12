@@ -169,21 +169,29 @@ def main(config: Config):
         )
 
 
-def setup_logging():
-    log.setLevel(logging.INFO)
-    handler = logging.handlers.RotatingFileHandler(
-        LOG_PATH, maxBytes=1_000_000, backupCount=2, encoding="utf-8"
+def run():
+    config = get_config()
+
+    setup_logging(
+        config,
+        logger_name="ddns-update",
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
-    log.addHandler(handler)
-    log.addHandler(logging.StreamHandler(sys.stdout))
+
+    try:
+        main(config)
+    except Exception:
+        log.exception("ddns-update failed")
+
+        notify_ntfy(
+            config,
+            "DDNS update FAILED",
+            "see ddns-update.log",
+        )
+
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    setup_logging()
-    try:
-        main()
-    except Exception:
-        log.exception("ddns-update failed")
-        notify_ntfy("DDNS update FAILED", "see ddns-update.log")
-        sys.exit(1)
+    sys.exit(run())
