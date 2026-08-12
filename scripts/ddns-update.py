@@ -63,12 +63,18 @@ def cf_headers(api_token):
     }
 
 
-def get_zone_id():
-    r = requests.get(f"{CF_API}/zones", headers=cf_headers(), params={"name": CF_ZONE}, timeout=15)
+def get_zone_id(zone, api_token):
+    r = requests.get(
+        f"{CF_API}/zones",
+        headers=cf_headers(api_token),
+        params={"name": zone},
+        timeout=15,
+    )
     r.raise_for_status()
     result = r.json()["result"]
     if not result:
-        raise RuntimeError(f"Cloudflare zone not found: {CF_ZONE}")
+        raise RuntimeError(f"Cloudflare zone not found: {zone}")
+
     return result[0]["id"]
 
 
