@@ -27,7 +27,7 @@ import sys
 
 import requests
 
-from lib.config import get_config
+from lib.config import get_config, Config, CloudflareConfig
 from lib.logging import setup_logging
 from lib.notifications import notify_ntfy
 
