@@ -113,29 +113,60 @@ def update_record(zone_id, record_id, new_ip, api_token):
         raise RuntimeError(f"Cloudflare update reported failure: {r.text[:300]}")
 
 
-def main():
+def main(config: Config):
     new_ip = current_wan_ip()
-    zone_id = get_zone_id()
+    zone_id = get_zone_id(
+        config.cf_zone,
+        config.cf_api_token,
+    )
 
     failures = []
-    for hostname in DDNS_RECORDS:
+    for hostname in config.ddns_records:
         try:
-            record = get_record(zone_id, hostname)
+            record = get_record(
+                zone_id,
+                hostname,
+                config.cf_api_token,
+            )
             old_ip = record["content"]
 
             if old_ip == new_ip:
-                log.info(f"no change: {hostname} already {new_ip}")
+                log.info(
+                    "no change: %s already %s",
+                    hostname,
+                    new_ip,
+                )
                 continue
 
-            update_record(zone_id, record["id"], new_ip)
-            log.info(f"updated: {hostname} {old_ip} -> {new_ip}")
-            notify_ntfy("DDNS updated", f"{hostname}: {old_ip} -> {new_ip}")
+            update_record(
+                zone_id,
+                record["id"],
+                new_ip,
+                config.cf_api_token,
+            )
+
+            log.info(
+                "updated: %s %s -> %s",
+                hostname,
+                old_ip,
+                new_ip,
+            )
+
+            notify_ntfy(
+                config,
+                "DDNS updated",
+                f"{hostname}: {old_ip} -> {new_ip}",
+            )
+
         except Exception as e:
-            log.exception(f"failed to update {hostname}")
+            log.exception("failed to update %s", hostname)
             failures.append(f"{hostname}: {e}")
 
     if failures:
-        raise RuntimeError(f"{len(failures)} of {len(DDNS_RECORDS)} record(s) failed: {'; '.join(failures)}")
+        raise RuntimeError(
+            f"{len(failures)} of {len(config.ddns_records)} "
+            f"record(s) failed: {'; '.join(failures)}"
+        )
 
 
 def setup_logging():
