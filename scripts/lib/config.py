@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 import os
+from typing import Optional
 from pathlib import Path
 
 __all__ = [
     "ApiConfig",
+    "CloudflareConfig",
     "Config",
     "get_config",
 ]
@@ -15,6 +17,14 @@ class ApiConfig:
 
     url: str
     api_key: str
+
+
+@dataclass(frozen=True)
+class CloudflareConfig:
+    """Cloudflare API configuration."""
+
+    zone: str
+    api_token: str
 
 
 @dataclass(frozen=True)
@@ -47,6 +57,9 @@ class Config:
     ntfy_url: str | None
     ntfy_topic: str | None
 
+    cloudflare: CloudflareConfig | None
+    ddns_records: Optional[tuple[str, ...]]
+
 
 def _api_config(prefix: str) -> ApiConfig | None:
     """Return initialized ApiConfig class."""
@@ -62,6 +75,23 @@ def _api_config(prefix: str) -> ApiConfig | None:
     return ApiConfig(
         url=url.rstrip("/"),
         api_key=api_key,
+    )
+
+
+def _cloudflare_config() -> CloudflareConfig | None:
+    """Return initialized CloudflareConfig."""
+    zone = os.environ.get("CF_ZONE")
+    api_token = os.environ.get("CF_API_TOKEN")
+
+    if not zone:
+        return None
+
+    if not api_token:
+        raise ValueError("CF_API_TOKEN is required")
+
+    return CloudflareConfig(
+        zone=zone,
+        api_token=api_token,
     )
 
 
@@ -95,4 +125,10 @@ def get_config() -> Config:
         seedbox_password=os.environ.get("SEEDBOX_PASSWORD"),
         ntfy_url=os.environ.get("NTFY_URL"),
         ntfy_topic=os.environ.get("NTFY_TOPIC"),
+        cloudflare=_cloudflare_config(),
+        ddns_records=tuple(
+            record.strip()
+            for record in os.environ.get("DDNS_RECORDS", "").split(",")
+            if record.strip()
+        ),
     )
