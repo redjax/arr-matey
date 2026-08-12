@@ -78,17 +78,26 @@ def get_zone_id(zone, api_token):
     return result[0]["id"]
 
 
-def get_record(zone_id, hostname):
-    r = requests.get(
+def get_record(zone_id, hostname, api_token):
+    t = requests.get(
         f"{CF_API}/zones/{zone_id}/dns_records",
-        headers=cf_headers(),
-        params={"type": "A", "name": hostname},
+        headers=cf_headers(api_token),
+        params={
+            "type": "A",
+            "name": hostname,
+        },
         timeout=15,
     )
-    r.raise_for_status()
-    result = r.json()["result"]
+    t.raise_for_status()
+
+    result = t.json()["result"]
+
     if not result:
-        raise RuntimeError(f"Cloudflare A record not found: {hostname} (create it once manually first)")
+        raise RuntimeError(
+            f"Cloudflare A record not found: {hostname} "
+            "(create it once manually first)"
+        )
+
     return result[0]
 
 
