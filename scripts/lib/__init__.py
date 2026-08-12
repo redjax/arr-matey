@@ -3,3 +3,5 @@
 This makes functions, classes, and variables from these modules available
 to other modules using `from lib.xx import x`.
 """
+
+from .config import *
