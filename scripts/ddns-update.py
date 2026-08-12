@@ -56,8 +56,11 @@ def current_wan_ip():
     raise RuntimeError(f"all IP echo services failed; last error: {last_error}")
 
 
-def cf_headers():
-    return {"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "application/json"}
+def cf_headers(api_token):
+    return {
+        "Authorization": f"Bearer {api_token}",
+        "Content-Type": "application/json",
+    }
 
 
 def get_zone_id():
