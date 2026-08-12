@@ -63,17 +63,17 @@ def cf_headers(api_token):
     }
 
 
-def get_zone_id(zone, api_token):
+def get_zone_id(cloudflare: CloudflareConfig):
     r = requests.get(
         f"{CF_API}/zones",
-        headers=cf_headers(api_token),
-        params={"name": zone},
+        headers=cf_headers(cloudflare.api_token),
+        params={"name": cloudflare.zone},
         timeout=15,
     )
     r.raise_for_status()
     result = r.json()["result"]
     if not result:
-        raise RuntimeError(f"Cloudflare zone not found: {zone}")
+        raise RuntimeError(f"Cloudflare zone not found: {cloudflare.zone}")
 
     return result[0]["id"]
 
@@ -114,11 +114,14 @@ def update_record(zone_id, record_id, new_ip, api_token):
 
 
 def main(config: Config):
+    if config.cloudflare is None:
+        raise ValueError("Cloudflare configuration is required for ddns-update")
+
+    if not config.ddns_records:
+        raise ValueError("DDNS_RECORDS is required for ddns-update")
+
     new_ip = current_wan_ip()
-    zone_id = get_zone_id(
-        config.cf_zone,
-        config.cf_api_token,
-    )
+    zone_id = get_zone_id(config.cloudflare)
 
     failures = []
     for hostname in config.ddns_records:
@@ -126,7 +129,7 @@ def main(config: Config):
             record = get_record(
                 zone_id,
                 hostname,
-                config.cf_api_token,
+                config.cloudflare.api_token,
             )
             old_ip = record["content"]
 
@@ -142,7 +145,7 @@ def main(config: Config):
                 zone_id,
                 record["id"],
                 new_ip,
-                config.cf_api_token,
+                config.cloudflare.api_token,
             )
 
             log.info(
