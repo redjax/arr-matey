@@ -23,11 +23,15 @@ main() collects failures and reports them all at the end.
 """
 
 import logging
-import logging.handlers
 import sys
 
 import requests
-from dotenv import dotenv_values
+
+from lib.config import get_config
+from lib.logging import setup_logging
+from lib.notifications import notify_ntfy
+
+log = logging.getLogger(__name__)
 
 ENV_PATH = r"C:\Users\drcor\acquisitions\.env"
 
